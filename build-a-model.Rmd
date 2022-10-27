@@ -25,13 +25,43 @@ The tutorial is written in extremely blunt and simple (maybe simplistic, sometim
 
 
 # Installing a functional R environment
+## Installing R
+We are going to rely on the statistical framework R, and you need to install it on your machine. You can find the installation files here:
+[ https://www.r-project.org/] (https://www.r-project.org/)
+And it should be running on any OS, just select the appropriate file. We will assume here you can already install software.  
+
+#Installing RStudio  
+R is a relatively bare environment that relies on command line inputs and any note editing software to craft your scripts. You can simplify your work using a specific integrated development enviroment, quite popular nowadays, RStudio:
+[https://www.rstudio.com/products/rstudio/] (https://www.rstudio.com/products/rstudio/)  
+  
+RStudio has four panels, and you work mainly in the first one after you have created a new R script file:
+![The RStudio interface](RStudio1.jpg)
+
+The other panels are useful, and the most important is the console, which is where your script "communicates" with R and where all the commands are run.  
+
+![The RStudio panels](RStudio2.jpg)
+
+
+You can select a chunk of code from your script, and when it is selected press "CTRL+Enter", and this will run the selected code (line by line) in the console.  
+You will probably create new objects, which you will see in the "Environment" tab in the panels up right.  
+The lower right panel is mainly for visualizing plots and for visualizing the files in your working folder.  
+Which reminds us: **set up your working directory!**  
+R works within a certain folder, for example reading and writing files there. The easiest way to deal with it for a beginner is to work always in the same folder where your script is:
+![The RStudio working directory](RStudio3.jpg)
+
+You can check what is your working directory writing in the console:
+```{r}
+getwd()
+```
+(and pressing then enter... here you see the working folder I am working with when writing this tutorial)
+Ok, now you are more or less familiar with the technicalities, let's build our model.  
 
 # An ODE solver?
 An ODE is an Ordinary Differential Equation. These describe a process "collapsing" the time, we consider an infinitesimally small fraction of time so that time becomes somehow irrelevant. In other words, an ODE defines the derivative of a function, while its solution describes the function over time.  
 Solving an ODE, or even worse an ODE system, can be quite tedious, but computers have neat tricks to do it for us. They do it "numerically", which means they find an approximate solution and not an exact one, but this is totally fine for us since they can approximate with a very high precision.  
 We do not need to understand how an ODE solver works, here, it just does. You give it the differential equation, and the solver uses it to develop a solution over time.
 
-# Setting up the ODE
+# Defining the ODE (= building the model)
 This is the important part, here you are building your model. All the rest are just technicalities.  
 We are going to describe the decomposition of a mass of organic carbon $C_0$ (carbon at time $0$) over time. Every instant we have a fraction of that carbon $k$ that decomposes, because microbes eat part of it (so the bigger the mass you have, the more C is going to leave it per unit of time). We can write it in differential form as:  
   
@@ -114,7 +144,7 @@ plot(output[,1], output[,2], type="l", xlab="time", ylab=expression(paste(C[t]))
 
 
 
-# encapsulating the ODE and the solver into a function we can calibrate
+# Encapsulating the ODE and the solver into a function we can calibrate
 To "calibrate" means we are going to try to find the parameter combination that minimize the error of the model relatively to our target data.
 In order to do this, we need to write down a function that as output gives the fitness of the solved ODE system with a certain parameter (which we will then vary automatically, you will see later).
 To do that such function should compare the output of our model with the measured data we are using for calibration. We will then encapsulate in this function the function we wrote above and the solver.
@@ -142,10 +172,20 @@ exp_optim<-function(Time, State, Pars) {
   })
 }
 ```
+  
+We will optimize the function to represent a dataset measured from a real experiment, the Ultuna Long Term Bare Fallow. It is a patch of soil which is kept devoid from any organic inputs since the start of the experiment (1956), where we can see just the decomposition of the existing organic matter. It is a rather simple case that suits well our simple model. Let's read and visualize the data first:
 
+```{r}
+#plotting the data
+plot(target_data$BF_duration, target_data$Mean_C.stock_t.ha, ylim=c(0,50),
+     ylab=expression(paste("C stocks t ",ha^-1)), xlab="Time", pch=16)
+legend("topright", c("Measured data"), bty="n", 
+       pch=c(16), lty=c(NA), lwd=c(NA), col=c("black"))
+```
 
-# optimizing the function (A.K.A. calibrating)
-We are now going forward and optimizing the function. In this case we are optimizing for one single parameter and we need to use the function `optimize`, much simpler than multi parameter optimizationa algorithms. One quirk of this particular function is the syntax, it needs to optimize a function that has as parameters only `x`, where `x` is the parameter of our objective function. We need therefore to write a small wrapper function like this:
+# Optimizing the function (A.K.A. calibrating)
+We are now going forward and optimizing the function. 
+In this case we are optimizing for one single parameter and we need to use the function `optimize`, much simpler than multi parameter optimizationa algorithms. One quirk of this particular function is the syntax, it needs to optimize a function that has as parameters only `x`, where `x` is the parameter of our objective function. We need therefore to write a small wrapper function like this:
 
 ```{r}
 exp_optim_wrapper<-function(x){exp_optim(Time, State, Pars=c(k=x))}
@@ -178,7 +218,7 @@ simulation
 All seems well, and our function simulates a reasonable trend of SOC decomposition. Let's try to plot it against the measurements:
 
 ```{r}
-
+#plotting the simulation against the data
 plot(target_data$BF_duration, target_data$Mean_C.stock_t.ha, ylim=c(0,50),
      ylab=expression(paste("C stocks t ",ha^-1)), xlab="Time", pch=16)
 lines(simulation$time, simulation$C, lty=2, lwd=2, col="red")
