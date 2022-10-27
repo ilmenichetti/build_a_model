@@ -2,13 +2,21 @@
 title: "Build-a-model"
 author: "Lorenzo Menichetti"
 date: "`r Sys.Date()`"
-output:
-  html_document: default
-  pdf_document: default
+# output:
+#   html_document: 
+#     toc: true
+#     toc_depth: 2
+#     number_sections: true
+#     fig_caption: false
+#     theme: readthedown
+#   pdf_document: default
+output: rmdformats::readthedown
+
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(rmdformats) # add this line
 ```
 
 # Introduction
@@ -23,18 +31,29 @@ We will rely on differential equations.
 This might sound scary, if you don't like maths, but computers have a lot of tricks to help you. A differential equation is extremely intuitive to read and write... it is just very difficult to solve. But we don't need to do that, the computer will do it for us.   
 The tutorial is written in extremely blunt and simple (maybe simplistic, sometimes) form.
 
+<div class="alert alert-warning">
+**The tutorial is all based on copy-paste.**  
+Your main task is to copy the code chunks you see here into an R script of your own and then run it step by step.  
+Play with it as much as you can, see what happens.  
+We will then discuss it together. 
+</div>
+\
+
+
 
 # Installing a functional R environment
+
 ## Installing R
+![ ](Rlogo.png){ style="width: 10%; margin: auto;" }  
 We are going to rely on the statistical framework R, and you need to install it on your machine. You can find the installation files here:
 [ https://www.r-project.org/] (https://www.r-project.org/)
 And it should be running on any OS, just select the appropriate file. We will assume here you can already install software.  
 
-#Installing RStudio  
-R is a relatively bare environment that relies on command line inputs and any note editing software to craft your scripts. You can simplify your work using a specific integrated development enviroment, quite popular nowadays, RStudio:
+# Installing RStudio  
+R is a relatively bare environment that relies on command line inputs and any note editing software to craft your scripts. You can simplify your work using a specific integrated development enviroment, quite popular nowadays, RStudio:  
 [https://www.rstudio.com/products/rstudio/] (https://www.rstudio.com/products/rstudio/)  
   
-RStudio has four panels, and you work mainly in the first one after you have created a new R script file:
+RStudio has four panels, and you work mainly in the first one after you have created a new R script file:  
 ![The RStudio interface](RStudio1.jpg)
 
 The other panels are useful, and the most important is the console, which is where your script "communicates" with R and where all the commands are run.  
@@ -45,9 +64,11 @@ The other panels are useful, and the most important is the console, which is whe
 You can select a chunk of code from your script, and when it is selected press "CTRL+Enter", and this will run the selected code (line by line) in the console.  
 You will probably create new objects, which you will see in the "Environment" tab in the panels up right.  
 The lower right panel is mainly for visualizing plots and for visualizing the files in your working folder.  
+
+<div class="alert alert-danger">
 Which reminds us: **set up your working directory!**  
-R works within a certain folder, for example reading and writing files there. The easiest way to deal with it for a beginner is to work always in the same folder where your script is:
-![The RStudio working directory](RStudio3.jpg)
+R works within a certain folder, for example reading and writing files there. The easiest way to deal with it for a beginner is to work always in the same folder where your script is:  
+![The RStudio working directory](RStudio3.jpg){ style="width: 70%; margin: auto;" }
 
 You can check what is your working directory writing in the console:
 ```{r}
@@ -55,6 +76,8 @@ getwd()
 ```
 (and pressing then enter... here you see the working folder I am working with when writing this tutorial)
 Ok, now you are more or less familiar with the technicalities, let's build our model.  
+</div>
+\
 
 # An ODE solver?
 An ODE is an Ordinary Differential Equation. These describe a process "collapsing" the time, we consider an infinitesimally small fraction of time so that time becomes somehow irrelevant. In other words, an ODE defines the derivative of a function, while its solution describes the function over time.  
