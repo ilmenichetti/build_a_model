@@ -8,8 +8,6 @@ date: "`r Sys.Date()`"
 #     toc_depth: 2
 #     number_sections: true
 #     fig_caption: false
-#     theme: readthedown
-#   pdf_document: default
 #output: rmdformats::readthedown
 output:
  prettydoc::html_pretty:
@@ -17,6 +15,7 @@ output:
    highlight: github
    toc: true
    number_sections: true
+   fig_caption: false
 ---
 
 ```{r setup, include=FALSE}
@@ -69,6 +68,7 @@ You can select a chunk of code from your script, and when it is selected press "
 You will probably create new objects, which you will see in the "Environment" tab in the panels up right.  
 The lower right panel is mainly for visualizing plots and for visualizing the files in your working folder.  
 
+### Set up correctly your working directory!
 <div class="alert alert-danger">
 Which reminds us: **set up your working directory!**  
 R works within a certain folder, for example reading and writing files there. The easiest way to deal with it for a beginner is to work always in the same folder where your script is:  
@@ -84,11 +84,14 @@ Ok, now you are more or less familiar with the technicalities, let's build our m
 \
 
 # An ODE solver?
+## ODEs
 An ODE is an Ordinary Differential Equation. These describe a process "collapsing" the time, we consider an infinitesimally small fraction of time so that time becomes somehow irrelevant. In other words, an ODE defines the derivative of a function, while its solution describes the function over time.  
+## Have the conputer solving ODEs for us
 Solving an ODE, or even worse an ODE system, can be quite tedious, but computers have neat tricks to do it for us. They do it "numerically", which means they find an approximate solution and not an exact one, but this is totally fine for us since they can approximate with a very high precision.  
 We do not need to understand how an ODE solver works, here, it just does. You give it the differential equation, and the solver uses it to develop a solution over time.
 
 # Defining the ODE (= building the model)
+## The simplest possible compartmental model: the exponential model
 This is the important part, here you are building your model. All the rest are just technicalities.  
 We are going to describe the decomposition of a mass of organic carbon $C_0$ (carbon at time $0$) over time. Every instant we have a fraction of that carbon $k$ that decomposes, because microbes eat part of it (so the bigger the mass you have, the more C is going to leave it per unit of time). We can write it in differential form as:  
   
@@ -103,13 +106,19 @@ The term $k$ is negative because we talk about decay (so it is a fraction of mas
 ..that's it. This is your model.  
 Done.  
 
+## The exponential decomposition model solved for time
 This equation becomes, when solved for time ($t$), becomes:  
   
 $C_t = C_0 \cdot e^{-k \cdot t}$  
   
-Which describes the evolution of the Carbon with time ($C_t$). It is an exponential function, rather common in nature. But for now skip the solution, because we won't need it here, and the approach you will learn is more general than that because you will be able to apply it to any ODE, and specifically will allow you to build rather complex compartmental decomposition models easily.
+Which describes the evolution of the Carbon with time ($C_t$). It is an exponential function, rather common in nature. But for now skip the solution, because we won't need it here, and the approach you will learn is more general than that because you will be able to apply it to any ODE, and specifically will allow you to build rather complex compartmental decomposition models easily.  
+As you might already know from other sources, it is a rather common approach for organic matter decomposition models to use this type of equations (exponential). In most cases they use more than one single comparment, including also the fluxes between them, but all compartments decompose with an exponential function. This function, as simple as it is, does a surprisingly good job in describing what happens in nature when organic matter decomposes.  
+
+
 
 # Writing the ODE in R and using a solver
+
+## Writing the function for our solver to use
 We need to write the ODE in a form that R can digest. We will use the package `deSolve` as solver. To use it, we first need to define our ODE into an own function: 
 
 ```{r eval=FALSE}
@@ -134,6 +143,8 @@ State <- c(C=80) #we need to give all the states as a vector of states, with c()
 #the vector elements are inside the parenthesis (only one in this case)
 Pars <- c(k=0.15) #as above
 ```
+
+## Running the solver
 
 We then proceed to run our ODE solver like this, with the function `ode`:
 
@@ -163,7 +174,7 @@ output
 
 ```
 
-
+## See what we've done?
 We can plot the output with: 
 ```{r}
 plot(output[,1], output[,2], type="l", xlab="time", ylab=expression(paste(C[t])))
@@ -174,7 +185,9 @@ plot(output[,1], output[,2], type="l", xlab="time", ylab=expression(paste(C[t]))
 # Encapsulating the ODE and the solver into a function we can calibrate
 To "calibrate" means we are going to try to find the parameter combination that minimize the error of the model relatively to our target data.
 In order to do this, we need to write down a function that as output gives the fitness of the solved ODE system with a certain parameter (which we will then vary automatically, you will see later).
-To do that such function should compare the output of our model with the measured data we are using for calibration. We will then encapsulate in this function the function we wrote above and the solver.
+
+## Writing a cost function
+To do that such function should compare the output of our model with the measured data we are using for calibration. We will then encapsulate in this function the function we wrote above and the solver. The "cost" is a metric we want to minimize, usually some metric of model fitness.
 
 ```{r}
 #reading the data we want to calibrate on
@@ -200,6 +213,7 @@ exp_optim<-function(Time, State, Pars) {
 }
 ```
   
+## Optimizing against measured data
 We will optimize the function to represent a dataset measured from a real experiment, the Ultuna Long Term Bare Fallow. It is a patch of soil which is kept devoid from any organic inputs since the start of the experiment (1956), where we can see just the decomposition of the existing organic matter. It is a rather simple case that suits well our simple model. Let's read and visualize the data first:
 
 ```{r}
@@ -234,6 +248,7 @@ We first redefine the parameter of our simulation as the output from the optimiz
 Pars_opt<-c(k=opt_results$minimum)
 ```
 
+## Running the simulation with our new (set of) parameter(s)
 And then proceed to run our model with it, storing the results in the object `simulation`:
 
 ```{r}
