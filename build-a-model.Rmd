@@ -10,13 +10,17 @@ date: "`r Sys.Date()`"
 #     fig_caption: false
 #     theme: readthedown
 #   pdf_document: default
-output: rmdformats::readthedown
-
+#output: rmdformats::readthedown
+output:
+ prettydoc::html_pretty:
+   theme: architect
+   highlight: github
+   toc: true
+   number_sections: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(rmdformats) # add this line
 ```
 
 # Introduction
