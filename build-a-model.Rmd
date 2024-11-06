@@ -187,7 +187,13 @@ To "calibrate" means we are going to try to find the parameter combination that 
 In order to do this, we need to write down a function that as output gives the fitness of the solved ODE system with a certain parameter (which we will then vary automatically, you will see later).
 
 ## Writing a cost function
-To do that such function should compare the output of our model with the measured data we are using for calibration. We will then encapsulate in this function the function we wrote above and the solver. The "cost" is a metric we want to minimize, usually some metric of model fitness.
+To do that such function should compare the output of our model with the measured data we are using for calibration.  
+
+**You will need a time series of measurements for optimizing your model. You can find the example here: [Ultuna_LTBF_data.csv](./Ultuna_LTBF_data.csv). Donwload it and put it in the same folder than your R script. **.  
+In case you did not set up your home directory to this folder, remember that the following commands will not work (the `read.csv` command will not find the file and complain).  
+
+
+We will then encapsulate in this function the function we wrote above and the solver. The "cost" is a metric we want to minimize, usually some metric of model fitness.
 
 ```{r}
 #reading the data we want to calibrate on
